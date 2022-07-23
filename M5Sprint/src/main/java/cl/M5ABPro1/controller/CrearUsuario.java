@@ -1,0 +1,96 @@
+package cl.M5ABPro1.controller;
+
+import jakarta.servlet.ServletException;
+//import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.util.List;
+
+import cl.M5ABPro1.model.implementation.UsuarioImpl;
+import cl.M5ABPro1.model.users.Administrativo;
+import cl.M5ABPro1.model.users.Cliente;
+import cl.M5ABPro1.model.users.Profesional;
+import cl.M5ABPro1.model.users.Usuario;
+
+/**
+ * Servlet implementation class CrearUsuario
+ */
+public class CrearUsuario extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * @see HttpServlet#HttpServlet()
+	 */
+	public CrearUsuario() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		HttpSession session = request.getSession();
+		String user = (String) session.getAttribute("user");
+		if (user != null) {
+			getServletContext().getRequestDispatcher("/views/crear-usuario.jsp").forward(request, response);
+		} else {
+			response.sendRedirect(request.getContextPath() + "/Login");
+		}
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		String nombre = request.getParameter("nombre");
+		String fechaNacimiento = request.getParameter("fechaNacimiento");
+		String run = request.getParameter("run");
+		String tipoUsuario = request.getParameter("tipoUsuario");
+		Usuario usuario = null;
+		if (tipoUsuario.equals("Administrativo")) {
+			String area = request.getParameter("area");
+			String experienciaPrevia = request.getParameter("experienciaPrevia");
+			usuario = new Administrativo(null, nombre, fechaNacimiento, run, area, experienciaPrevia);
+		} else if (tipoUsuario.equals("Cliente")) {
+			String rut = request.getParameter("rut");
+			String nombres = request.getParameter("nombres");
+			String apellidos = request.getParameter("apellidos");
+			String telefono = request.getParameter("telefono");
+			String afp = request.getParameter("afp");
+			String sistemaSalud = request.getParameter("sistemaSalud");
+			String direccion = request.getParameter("direccion");
+			String comuna = request.getParameter("comuna");
+			String edad = request.getParameter("edad");
+			usuario = new Cliente(null, nombre, fechaNacimiento, run, rut, nombres, apellidos, telefono, afp,
+					Integer.parseInt(sistemaSalud), direccion, comuna, Integer.parseInt(edad));
+		} else if (tipoUsuario.equals("Profesional")) {
+			String titulo = request.getParameter("titulo");
+			String fechaIngreso = request.getParameter("fechaIngreso");
+			usuario = new Profesional(null, nombre, fechaNacimiento, run, titulo, fechaIngreso);
+		} else {
+			usuario = new Usuario(null, nombre, fechaNacimiento, run);
+		}		
+
+		HttpSession session = request.getSession();
+		String user = (String) session.getAttribute("user");
+		if (user != null) {
+			UsuarioImpl impl = new UsuarioImpl();
+			impl.registrarUsuario(usuario);
+			List<Usuario> usuarios = impl.listarUsuarios();
+			request.setAttribute("usuarios", usuarios);	
+			getServletContext().getRequestDispatcher("/views/listado-usuarios.jsp").forward(request, response);
+		} else {
+			response.sendRedirect(request.getContextPath() + "/Login");
+		}
+	}
+
+}
